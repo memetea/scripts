@@ -1,9 +1,8 @@
 #!/bin/bash
 
 #本脚本可以在centos上安装trojan，注意必须有域名指向本机
-yum install epel-release certbot -y
-yum install git tmux net-tools boost cmake make automake gcc gcc-c++ kernel-devel boost-devel openssl-devel mysql-devel nginx -y
-
+sudo apt install git tmux net-tools libboost-all-dev cmake make automake build-essential linux-libc-dev  openssl  libssl-dev libmysqlclient-dev nginx
+sudo apt install certbot -y
 
 #compile and install trojan
 git clone https://github.com/trojan-gfw/trojan.git
@@ -27,6 +26,7 @@ fi;
 
 sed -i "s/\"password1\",/\"${pwd}\"/" /usr/local/etc/trojan/config.json
 
+sudo systemctl stop nginx
 #apply certificate
 [ ! -d "/usr/local/trojan-cert/" ] && mkdir /usr/local/trojan-cert
 sed -i 's|/path/to/|/usr/local/trojan-cert/|' /usr/local/etc/trojan/config.json
@@ -59,5 +59,5 @@ sudo echo net.core.default_qdisc=fq >> /etc/sysctl.conf
 sudo echo net.ipv4.tcp_congestion_control=bbr >> /etc/sysctl.conf
 sudo sysctl -p
 
-systemctl start nginx
-systemctl restart trojan
+sudo systemctl start nginx
+sudo ystemctl restart trojan
