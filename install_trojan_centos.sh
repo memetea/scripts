@@ -1,19 +1,93 @@
 #!/bin/bash
-
 #本脚本可以在centos上安装trojan，注意必须有域名指向本机
-yum install epel-release certbot -y
-yum install git tmux net-tools boost cmake make automake gcc gcc-c++ kernel-devel boost-devel openssl-devel mysql-devel nginx -y
 
+install_trojan_from_source() {
+	yum install epel-release -y
+    yum install epel-release -y
+    yum install git tmux net-tools boost cmake make automake gcc gcc-c++ kernel-devel boost-devel openssl-devel mysql-devel nginx -y
 
-#compile and install trojan
-git clone https://github.com/trojan-gfw/trojan.git
-cd trojan/
-mkdir build
-cd build/
-cmake ..
-make
-ctest
-sudo make install
+    #compile and install trojan
+    git clone https://github.com/trojan-gfw/trojan.git
+    cd trojan/
+    mkdir build
+    cd build/
+    cmake ..
+    make
+    ctest
+    sudo make install
+}
+
+install_trojan_from_precompiled() {
+	if [ -f /usr/local/bin/trojan ] ; then
+		echo 'trojan已经安装， 请选择>'
+		select choice in 覆盖 退出 
+		do 
+			if [[ "$choice" = "覆盖" ]]; then
+				uninstall_trojan
+				break;
+			elif [[ "$choice" = "退出" ]]; then
+			    exit;
+			fi;
+		done
+	fi;
+	sudo apt install wget nginx
+	wget https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.16.0-linux-amd64.tar.xz
+	tar xvf trojan-1.16.0-linux-amd64.tar.xz
+	[ ! -d /usr/local/etc/trojan ] && mkdir /usr/local/etc/trojan
+	cp trojan/config.json /usr/local/etc/trojan/
+	cp trojan/trojan /usr/local/bin/
+	rm -rf trojan && rm trojan-1.16.0-linux-amd64.tar.xz
+	cat  > /lib/systemd/system/trojan.service << EOF
+[Unit]
+Description=trojan
+Documentation=man:trojan(1) https://trojan-gfw.github.io/trojan/config https://trojan-gfw.github.io/trojan/
+After=network.target network-online.target nss-lookup.target mysql.service mariadb.service mysqld.service
+
+[Service]
+Type=simple
+StandardError=journal
+User=nobody
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+ExecStart=/usr/local/bin/trojan /usr/local/etc/trojan/config.json
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=1s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+}
+
+uninstall_trojan() {
+	[ -f /lib/systemd/system/trojan.service ] && sudo systemctl stop trojan && rm /lib/systemd/system/trojan.service
+	[ -f /usr/local/etc/trojan ] && rm -rf /usr/local/etc/trojan
+	[ -f /usr/local/bin/trojan ] && rm /usr/local/bin/trojan
+}
+
+echo '请输入trojan安装方式:'
+select choice in '从源码编译' '使用预编译的程序' '卸载trojan' quit
+do case "$choice" in
+'从源码安装')
+    install_trojan_from_source;
+    break;
+    ;;
+'使用预编译的程序')
+    install_trojan_from_precompiled;
+    break;
+    ;;
+'卸载trojan')
+   uninstall_trojan;
+   echo 'trojan uninstalled';
+   exit;
+   break;
+   ;; 
+quit)
+    exit;
+    ;;
+*)
+    echo 'error input';
+esac
+done
 
 #delete line contains password2
 sed -i '/password2/d' /usr/local/etc/trojan/config.json
