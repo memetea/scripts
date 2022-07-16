@@ -1,10 +1,13 @@
 #!/bin/bash
 #本脚本可以在centos上安装trojan，注意必须有域名指向本机
 
+install_deps() {
+	yum install epel-release wget certbot nginx -y
+}
+
 install_trojan_from_source() {
-	yum install epel-release -y
-    yum install epel-release -y
-    yum install git tmux net-tools boost cmake make automake gcc gcc-c++ kernel-devel boost-devel openssl-devel mysql-devel nginx -y
+    install_deps
+    yum install git tmux net-tools boost cmake make automake gcc gcc-c++ kernel-devel boost-devel openssl-devel mysql-devel  -y
 
     #compile and install trojan
     git clone https://github.com/trojan-gfw/trojan.git
@@ -30,7 +33,7 @@ install_trojan_from_precompiled() {
 			fi;
 		done
 	fi;
-	sudo apt install wget nginx
+	install_deps
 	wget https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.16.0-linux-amd64.tar.xz
 	tar xvf trojan-1.16.0-linux-amd64.tar.xz
 	[ ! -d /usr/local/etc/trojan ] && mkdir /usr/local/etc/trojan
@@ -102,6 +105,7 @@ fi;
 sed -i "s/\"password1\",/\"${pwd}\"/" /usr/local/etc/trojan/config.json
 
 #apply certificate
+systemctl stop nginx
 [ ! -d "/usr/local/trojan-cert/" ] && mkdir /usr/local/trojan-cert
 sed -i 's|/path/to/|/usr/local/trojan-cert/|' /usr/local/etc/trojan/config.json
 for i in 1 2 3
@@ -133,5 +137,6 @@ sudo echo net.core.default_qdisc=fq >> /etc/sysctl.conf
 sudo echo net.ipv4.tcp_congestion_control=bbr >> /etc/sysctl.conf
 sudo sysctl -p
 
+systemctl reload-daemon
 systemctl start nginx
 systemctl restart trojan
