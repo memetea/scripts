@@ -2,7 +2,8 @@
 #本脚本可以在centos上安装trojan，注意必须有域名指向本机
 
 install_deps() {
-	yum install epel-release wget certbot nginx -y
+	yum install epel-release -y
+	yum install wget certbot nginx -y
 }
 
 install_trojan_from_source() {
@@ -137,6 +138,6 @@ sudo echo net.core.default_qdisc=fq >> /etc/sysctl.conf
 sudo echo net.ipv4.tcp_congestion_control=bbr >> /etc/sysctl.conf
 sudo sysctl -p
 
-systemctl reload-daemon
+systemctl daemon-reload
 systemctl start nginx
 systemctl restart trojan
