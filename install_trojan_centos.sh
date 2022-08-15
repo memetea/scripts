@@ -1,19 +1,22 @@
 #!/bin/bash
+install_deps() {
+        yum install epel-release -y
+        yum install wget certbot nginx -y
+}
 
 install_tapnet_from_source() {
-	sudo apt update
-	sudo apt install git tmux net-tools libboost-all-dev cmake make automake build-essential linux-libc-dev  openssl  libssl-dev libmysqlclient-dev nginx
-	sudo apt install certbot 
+        install_deps
+yum install git tmux net-tools boost cmake make automake gcc gcc-c++ kernel-devel boost-devel openssl-devel mysql-devel  -y
 
-	#compile and install tapnet
-	git clone https://github.com/tapnet-gfw/tapnet.git
-	cd tapnet/
-	mkdir build
-	cd build/
-	cmake ..
-	make
-	ctest
-	sudo make install
+        #compile and install tapnet
+        git clone https://github.com/tapnet-gfw/tapnet.git
+        cd tapnet/
+        mkdir build
+        cd build/
+        cmake ..
+        make
+        ctest
+        sudo make install
 }
 
 install_tapnet_from_precompiled() {
@@ -29,7 +32,7 @@ install_tapnet_from_precompiled() {
 			fi;
 		done
 	fi;
-	sudo apt install wget nginx certbot
+	install_deps
 	[ ! -f trojan-1.16.0-linux-amd64.tar.xz ] && wget https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.16.0-linux-amd64.tar.xz && tar xvf trojan-1.16.0-linux-amd64.tar.xz
 	[ ! -d /usr/local/etc/tapnet ] && mkdir /usr/local/etc/tapnet
 	cp trojan/config.json /usr/local/etc/tapnet/
