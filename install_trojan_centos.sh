@@ -124,9 +124,11 @@ done
 sudo cat /etc/letsencrypt/live/$domain/privkey.pem > /usr/local/etc/tapnet/privkey.pem
  cat > /usr/local/etc/tapnet/renew-cert.sh <<EOF
  #!/bin/bash
+ systemctl stop nginx
  certbot renew
  cp /etc/letsencrypt/live/${domain}/fullchain.pem  /usr/local/etc/tapnet/fullchain.crt
  cat /etc/letsencrypt/live/${domain}/privkey.pem  /usr/local/etc/tapnet/private.key
+ systemctl start nginx
 EOF
 chmod u+x /usr/local/etc/tapnet/renew-cert.sh
 
