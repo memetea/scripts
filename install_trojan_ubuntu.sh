@@ -120,9 +120,11 @@ done
  sudo certbot certonly --standalone -d $domain
  cat > /usr/local/etc/trojan/renew-cert.sh <<EOF
  #!/bin/bash
+ sudo systemctl stop nginx
  certbot renew
  cp /etc/letsencrypt/live/${domain}/fullchain.pem  /usr/local/etc/trojan/certificate.crt
  cat /etc/letsencrypt/live/${domain}/privkey.pem  /usr/local/etc/trojan/private.key
+ sudo systemctl start nginx
 EOF
 chmod u+x /usr/local/etc/trojan/renew-cert.sh
 
